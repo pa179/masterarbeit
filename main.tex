@@ -1,0 +1,187 @@
+\vfill\documentclass[12pt]{extarticle}
+
+%PA
+\usepackage{csvsimple}
+\usepackage{float}
+\usepackage{dirtree}
+\usepackage{paralist}
+\usepackage{extarrows}
+\usepackage{svg}
+\usepackage{caption}
+\usepackage{subcaption}
+
+
+%Code
+%\usepackage[disable]{todonotes}
+\usepackage{todonotes}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{pdfpages}
+\usepackage{pdflscape}
+\usepackage{amssymb}
+\usepackage{rotating}
+\usepackage{verbatim}
+\usepackage[justification=centering]{caption}
+\usepackage{csquotes}
+\usepackage{wasysym}
+\usepackage[ngerman]{babel}
+%\usepackage[backend=biber,style=numeric,sorting=nyt]{biblatex}
+\usepackage{hyperref}
+\usepackage{lastpage}
+\usepackage{hyperref}
+\usepackage[a4paper, left = 2.8cm, right = 2.8cm, top=1.5cm , bottom = 1.5cm, includeheadfoot]{geometry}
+\usepackage[style=numeric]{biblatex}
+\addbibresource{literatur.bib}
+\usepackage{enumitem}
+
+\usepackage{parskip}
+\setlength{\parindent}{0pt} 
+\setlength{\parskip}{0.8em}
+
+
+\setlength{\parindent}{0em} %Absätze nicht einrücken
+
+\usepackage{fancyhdr}
+\pagestyle{fancy} %eigener Seitenstil
+\fancyhf{} %alle Kopf- und Fußzeilenfelder bereinigen
+\fancyhead[L]{\nouppercase{\leftmark}} %Kopfzeile links
+\fancyhead[C]{} %zentrierte Kopfzeile
+\fancyhead[R]{} %Kopfzeile rechts
+\renewcommand{\headrulewidth}{0.4pt} %obere Trennlinie
+\fancyfoot[C]{\thepage} %Seitennummer
+\renewcommand{\footrulewidth}{0.4pt} %untere Trennlinie
+
+
+% Links
+% https://www.nm.ifi.lmu.de/pub/Fopras/schw14/PDF-Version/schw14.pdf
+
+
+
+\title{Bachelorthesis}
+
+\author{Philipp Altnickel}
+\begin{document}
+\begin{titlepage}
+	\centering
+	\includegraphics[width=0.49\textwidth]{Logo_HSB_Hochschule_Bremen.png}
+	\includegraphics[width=0.49\textwidth]{Logo_HEC.png}
+	\par
+	\vspace{2cm}
+	{\large \textbf{Masterthesis}\\Fakultät 4 Elektrotechnik und Informatik\\Informatik M. Sc. (Komplexe Softwaresysteme)\par}
+	\vspace{2cm}
+	{\LARGE\bfseries Prozessoptimierung der Stückgutverladung auf LKW im Hafenterminal innerhalb von gebuchten Zeitfenstern\par}
+	\vspace{3cm}
+	{\large \textbf{Eingereicht von:} Philipp Altnickel (5049547)\par}
+	{\large \textbf{Abgabetermin:} 07.10.2024\par}
+	\vspace{1cm}
+	{\large \bfseries zum Erlangen des akademischen Grades\par\LARGE Master of Science (M.Sc.)\par}
+	
+	\vfill
+	
+	{\large \textbf{Erstprüfer:} Prof. Dr. Lars Braubach (Hochschule Bremen)\\\textbf{Zweitprüfer:} André Stadtelmeyer (HEC GmbH)\par}
+\end{titlepage}
+\newpage
+
+\setcounter{page}{2}
+
+\phantomsection
+\subsection*{Erklärung über das eigenständige Erstellen der Arbeit}
+
+Hiermit versichere ich, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die angegebenen Quellen und Hilfsmittel benutzt habe. Die Stellen der Arbeit, die anderen Werken dem Wortlaut oder dem Sinn nach entnommen wurden, sind durch Angaben der Herkunft kenntlich gemacht.
+
+Diese Erklärung erstreckt sich auch auf in der Arbeit enthaltene Grafiken, Skizzen, bildliche Darstellungen sowie auf Quellen aus dem Internet.
+Die Arbeit habe ich in gleicher oder ähnlicher Form auch auszugsweise noch nicht als Bestandteil einer Prüfungs- oder Studienleistung vorgelegt. 
+
+Ich versichere, dass die eingereichte elektronische Version der Arbeit vollständig mit der Druckversion übereinstimmt.
+\\ \\ \\
+
+\makebox[6cm]{\hrulefill}\hfill\makebox[6cm]{\hrulefill}\\
+Ort, Datum \hfill Philipp Altnickel\\
+\mbox{}\hfill(Matr.-Nr. 5049547)
+
+
+
+\newpage
+\phantomsection
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+\todo[inline]{Schreiben}
+
+
+
+\newpage
+\tableofcontents
+
+\newpage
+\pagestyle{fancy}
+
+\section{Einleitung}
+
+\input{einleitung}
+
+
+
+\newpage
+\section{Grundlagen}
+\input{grundlagen} % aktuell 2 Seiten
+
+
+\newpage
+\section{Analyse des Problemfelds}
+\label{sec:analyse}
+\input{analyse} % aktuell 5 Seiten
+
+\newpage
+\section{Konzeption von Optimierungen}
+\input{konzeption} % aktuell 21 Seiten
+
+
+
+\newpage
+\section{Prototypische Realisierung}
+\label{sec:realisierung}
+\input{realisierung}
+
+
+
+\newpage
+\section{Evaluation}
+\label{sec:evaluation}
+\input{evaluation} % aktuell 24 Seiten
+
+
+\newpage
+\section{Zusammenfassung und Ausblick}
+\input{zusammenfassung}
+
+
+\newpage
+\sloppy % prevent urls to be too long
+\phantomsection
+\printbibliography[heading=bibintoc, title={Literatur}]
+\fussy % reset sloppy to defaults
+
+
+\newpage
+%\renewcommand\listfigurename{}
+%\section*{Abbildungsverzeichnis}
+%\vspace{-1.2cm}
+\phantomsection
+\addcontentsline{toc}{section}{Abbildungsverzeichnis}
+\listoffigures
+
+%\renewcommand\listtablename{}
+%\section*{Tabellenverzeichnis}
+%\vspace{-1.2cm}
+\phantomsection
+\addcontentsline{toc}{section}{Tabellenverzeichnis}
+\listoftables
+
+\newpage
+\appendix
+\input{appendix}
+
+\end{document}

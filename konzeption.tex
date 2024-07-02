@@ -1,0 +1,576 @@
+Nach der Problemanalyse und der Untersuchung auf Ansatzpunkte für eine mögliche Optimierung des Prozesses, folgt in diesem Kapitel nun die Überführung dieser Gedanken in Konzepte zur praktischen Umsetzung. Dabei wird untersucht, welche theoretischen Verfahren geeignet wären, um die herausgearbeiteten Anforderungen zu erfüllen. Außerdem wird für passende Verfahren auch schon eine prototypische Implementierung geplant.
+
+\subsection{Anforderungsanalyse}
+\todo{Weitere Anforderungen?}
+\todo{Konzentration auf Abladen? Laden außen vor lassen?}
+
+\todo[inline]{Festlegungen: 1. Nur eine Art von Gut/HandlingCategory pro LKW möglich; 2. ...}
+
+In diesem Kapitel werden zunächst einmal die Kernanforderungen und die Ziele dieser Entwicklungsarbeit zusammengetragen.
+
+Die Hauptaufgabe, weshalb der ganze Aufwand überhaupt betrieben werden soll, ist die verbesserte Einplanung von ankommenden LKW am Terminal. Ziel ist es, durch gezielte Planung der Ankunftszeiten, eine schnellere bzw. effizientere Abfertigung zu realisieren und dadurch insgesamt Zeiteinsparungen zu erreichen, welche dann genutzt werden können, um zusätzliche LKW zu bearbeiten. Dieses Ziel soll mit Hilfe einer softwaretechnischen Lösung erreicht werden, es sollen also passende Algorithmen geplant und entwickelt werden. In vorherigen Kapiteln wurden bereits die wesentlichen um am meisten Gewinn versprechenden Optimierungspotentiale herausgearbeitet. Es wird sicherlich sehr schwierig sein, eine Lösung zu finden, welche all diese Punkte berücksichtigt. Aus diesem Grund wird im folgenden eher abzuwägen sein, welche dieser Ansätze sich kombinieren lassen und wie sich diese dann in einer Software umsetzen lassen.
+
+Um den Umfang dieser prototypischen Entwicklung überschaubar zu halten und den Fokus auf den Kern, der Entwicklung von Optimierungen zu lenken, sollen auch nur diese hier bearbeitet werden. Rahmenfunktinalitäten, wie die Eingabe von Avisierungen oder auch die Kommunikation der geplanten Zeiten mit den Speditionen und LKW Fahrern sollen an dieser Stelle nicht betrachtet werden.
+
+Um eine sinnvolle Planung durchführen zu können, wird es unumgänglich sein, eine eine gute Datenbasis zu schaffen. Dem Planungsalgorithmus muss also eine Liste von Datensätzen übergeben werden, die jeweils alle Avisierungen für einen Zeitslot enthalten. Welche Details das genau sind, wird auch von dem nachfolgend geplanten Algorithmus abhängen. Ein solcher Eingabedatensatz wird aber sicherlich folgende Informationen enthalten müssen:
+\begin{itemize}
+    \item Liefergutart
+    \item Warenbeschreibung
+    \item Buchungsnummer
+    \item Ausmaße der Ware: Länge, Breite, Höhe, Gewicht
+    \item Kategorie der Be- oder Entladung (zur Bestimmung der benötigten Ladehilfsmittel und Ressourcen)
+\end{itemize}
+Ein Optimierungsalgorithmus muss aus diesen Daten für jeden LKW eine genaue Ankunftszeit festlegen und ausgeben. Die genaue Art und Weise der Planung wird noch zu untersuchen sein, es wird allerdings kaum umgänglich sein, zunächst alle Avisierungen mit einer groben Vorstellung des Zeitfensters zu sammeln und im Nachgang eine genaue Zeit festzulegen. Andernfalls wird es wieder viel Spielraum und Zufallsvariablen geben, die eine Optimierung des akutellen Zustands nahezu unmöglich machen.
+
+Ein weiterer Aspekt, welcher berücksichtigt werden sollte, ist das Zeitverhalten der entwickelten Algorithmus. Grundsätzlich ist es so, dass eine schnelle Berechnung besser dafür geeignet ist Echtzeit, bzw. schnelle Änderungen zu berechnen. Ergeben sich z.B. kurzfristige Veschiebungen im Zeitplan, so wäre es mit einem schnellen Algorithmus möglich, in kurzer Zeit eine Ersatzplanung zu erzeugen. Fraglich wäre allerdings ohnehin, ob es so kurzfristig möglich ist, Ankunftszeiten späterer LKWs vorzuverlegen oder ganz neue LKWs einzuplanen. Vermutlich wird das für mehr Durcheinander sorgen, als dass es am Ende Vorteile bringt. Aus diesem Grund ist eine schnelle Verarbeitungszeit zu bevorzugen, allerdings wird ein langsamer Algorithmus, welcher möglicherweise über Nacht oder einige Tage im Voraus arbeiten kann, um einen besseren Plan zu erzeugen auch akzeptabel. Es ist ohnehin zu bedenken, dass eine möglichst genaue und auch zuverlässige Anmeldung und Ankunft der LKW für den ganzen Optimierungsprozess wichtig ist. Wenn es also sehr regelmäßig zu kurzfristigen Änderungen kommt, wäre ohnehin abzuwägen, wie praxistauglich die gefundene Lösung ist. Ohne zuverlässiges Vorwissen ist es einfach sehr schwer Verbesserungen zu erzielen.
+
+
+\subsection{Vergleich von Lösungsansätzen}
+
+Die Idee zum weiteren Vorgehen ist es nun, einen Algorithmus zu planen, welcher die zuvor herausgearbeiteten Anforderungen und Ziele erfüllen kann. Es soll also möglich sein, einen vorgegebenen Satz von Avisierungen in einen derartigen Zeitplan zu überführen, dass möglichst wenig Zeit benötigt wird, bzw. dass möglichst viele zusätzliche LKW abgearbeitet werden können als es bisher der Fall ist. Die Schwierigkeit, die sich dabei vor allem ergibt ist, dass es extrem schwer ist, alle zuvor genannten Rahmenbedingungen, Regeln und Einflussfaktoren in einem einzigen Algorithmus zu vereinen. Aus diesem Grund ist der Ansatz zum Finden einer geeigneten Lösung, bekannte Probleme zu finden oder diese zumindest soweit abzuwandeln, dass sich bekannte und bereits gut erforschte Lösungen anwenden lassen. Dies verringert den Arbeitsaufwand enorm und führt gleichzeitig zu einer wesentlich höheren Erfolgsaussicht. Derartige Verfahren wurden bereits vielfach getestet. Außerdem wäre es extrem Aufwändig und in dieser Arbeit vermutlich kaum schaffbar, umfangreiche Eigenentwicklungen anzustellen.
+
+Wie bereits herausgearbeitet wurde, handelt es sich bei der vorliegenden Aufgabe um ein sehr komplexes Problem mit vielen Einflussfaktoren. Ein in den letzten Jahren sehr populär gewordener und weit verbreiteter Ansatz, um solche Probleme zu lösen, ist die Künstliche Intelligenz (für Grundlagen siehe Kapitel \ref{section:ki}) \cite{KIverstehen}. Deshalb ist dies auch hier ein Ansatz, der nachfolgend genauer beleuchtet werden soll. 
+
+Das Konzept KI stellt sich dabei allerdings für seine Umsetzung als eher schwierig heraus, sodass zwei Ideen weitere erarbeitet wurden, wie ein entsprechender Algorithmus aussehen könnte. Beide berücksichtigen unterschiedliche Aspekte aus der Analyse der Optimierungspotenziale (siehe Kapitel \ref{sec:analyseOptimierungspotenziale}). Da es schwierig ist, einen Algorithmus zu planen, welcher alle Aspekte berücksichtigt, sollen im Folgenden beide Ansätze geplant, implementiert und verglichen werden, um so möglichst viele Ideen zur Optimierung abzudecken und hinterher einen Bewertung der vielversprechendsten Methoden zu erzielen.
+
+\subsubsection{Lösung mittels KI}
+
+\todo{Erweitern/Überarbeiten}
+
+Die grundlegende Idee ist es, die KI so trainieren, dass sie alle nötigen Zusammenhänge des Problems selbstständig erkennen und auf neue Eingabedaten anwenden kann. So müssten nicht alle Details und Randbedingungen manuell erfasst und implementiert werden. Die Voraussetzung dafür ist, dass es bereits eine große Datenbasis zum Training gibt \cite{KIverstehen}. Diese Datengrundlage ist im vorliegenden Beispiel leider nicht gegeben. Es gibt so gut wie keine realen Daten, auf die zurückgegriffen werden kann. Fiktive Datensätze würden sich sicherlich aufstellen lassen, allerdings ist hier zum einen die Frage, ob eine KI damit alle Dimensionen des Problems erfassen kann. Zum anderen wäre das ein extremer zusätzlicher Aufwand.
+
+Insgesamt würde zur weiteren Verfolgung dieses Ansatzes sehr viel Zeit in die Einarbeitung, Entwicklung und das Training einer KI fließen, ohne dass ein Erfolg wirklich sicher ist. Aus diesem Grund wurde dieser Ansatz auch nicht umfangreicher verfolgt und mit dieser kurzen Recherche abgeschlossen.
+
+\subsubsection{Algorithmus 1: Planung der Ressourcen}
+\todo{Hier oder in Evaluation erwähnen, dass hier im vergleich zu TSP die Ressourcen aller Ladeplätze parallel verplant werden, eine dedizierte unterscheidung wurde hier weggelassen }
+
+Die Idee dieser Variante ist es, alle auf dem Terminalgelände zur Verfügung stehenden Ressourcen zu erfassen und in einem Zeitplan möglichst optimal auf die angemeldeten LKW zu verteilen. Grundvoraussetzung ist hier auf jeden Fall eine gute und vollständige Anmeldung, sodass bereits bei der Planung klar ist, welche Ressourcen durch welchen Auftrag gebunden werden. Der Gedanke ist hier, dass durch eine freie Planung innerhalb des vorausgewählten Slots eine deutlich effektivere und höhere Ausnutzung der Ressourcen erzielt werden kann, als wenn die LKW einfach zufällig kommen. Wenn Ressourcen nicht für einen Großteil des Slots benötigt werden, könnte deren Nutzungszeit zumindest auf einen möglichst engen Zeitraum begrenzt werden, um die Leerlaufzeit zu minimieren und sie möglicherweise für ganz andere Arbeiten verfügbar zu machen. Es müssen aber noch einige weitere Rahmenbedingungen und Annahmen für diesen Ansatz gesetzt werden. So ist es für eine gute Planung wichtig, eine möglichst genaue Einschätzung darüber zu haben, welche Ressourcen jeweils benötigt werden und wie lange die Bearbeitung welches LKWs dauert, d.h. wie lange jede Ressource pro Auftrag gebunden ist. 
+
+Idee wäre es hier, alle Ressourcen auf einer Art Zeitachse einzuplanen. Dabei ist die Besonderheit, dass ein Job mehrere Ressourcen parallel benötigt (vgl. Abb. \ref{fig:rsExampleSchedule}).
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/timelines/rsExampleSchedule.png}
+    \caption{Beispielhafter Zeitplan für die Ressourcennutzung der Buchungen}
+    \label{fig:rsExampleSchedule}
+\end{figure}
+
+Der Ansatz zur Umsetzung bzw. zur Lösung des beschriebenen Problems wäre es nun also, einen passenden Scheduling Algorithmus zu finden und möglicherweise leicht anzupassen. Dies stellte sich allerdings bei genauerer Recherche als gar nicht so einfach heraus, wie es im ersten Moment klingt. Es handelt sich hier schon um einen sehr speziellen Anwendungsfall mit einigen besonderen Anforderungen. Im folgenden werden einige genauer betrachtete Möglichkeiten erläutert, viele hatten allerdings gemeinsam, dass sie nur mit extremer Abwandlung des Algorithmus oder des Problems anwendbar wären. Dann hätte die darauf aufbauende Lösung allerdings kaum noch etwas mit dem eigentlichen Problem und Ziel dieser Arbeit zu tun.
+
+\textbf{Job Shop Scheduling}
+\todo{NP-schwer erwähnen?!}
+
+Ein verbreitetes Optimierungsproblem, welches durchaus auch gewissen Ähnlichkeit zu dem hier dargestellten Problem hat, ist das Job-Shop Scheduling bzw. das Job-Shop Problem.
+
+Ziel dieses Verfahrens ist es, eine Maschinenbelegung zu planen. Ein Beispiel für einen so optimierten Produktionsprozess ist in Abb. \ref{fig:job_shop_skizze} dargestellt. Jeder Job muss dabei nacheinander mehrere Maschinen belegen. Im Beispiel muss jedes Blatt Papier durch alle Druckmaschinen mit den Farben Grün, Blau und Gelb laufen. Dafür soll eine optimale Reihenfolge gefunden werden, wann welcher Job auf welcher Maschine bearbeitet wird, sodass die gesamte Produktionsdauer möglichst gering ist. Der Prozess kann aber auch komlexer sein. So können verschiedene Jobs unterschiedliche Maschinen benötigen. So sind in Varianten des JSP u.a. auch doppelte Maschinen oder eine feste Reihenfolge der Abarbeitung möglich. \cite{jobshop1}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/jobshopdiagram.jpg}
+    \caption{Beispielhafte Produktion zur Planung mit Job Shop Scheduling \cite{jobshop2}}
+    \label{fig:job_shop_skizze}
+\end{figure}
+
+Ein daraus resultierender Zeitplan ist beispielhaft in Abb. \ref{fig:job_shop_schedule} zu erkennen. Für jede Maschine wurden hier ein Zeitfenster bestimmt, wann sie für welchen Job arbeitet. Dadurch das die Bearbeitungszeiten sehr große Unterschiede haben können, ist eine gute Verteilung wichtig, damit sich möglichst wenige Jobs gegenseitig blockieren und die Gesamtzeit des Plans verkürzt werden kann.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/jobshopdiagram_schedule.png}
+    \caption{Mittels Job-Shop-Verfahren ermittelter Zeitplan der Produktion \cite{jobshop2}}
+    \label{fig:job_shop_schedule}
+\end{figure}
+
+Der große Vorteil bei der Nutzung des Job Shop Problems (JSP) wäre, dass zum einen die Modellierung sehr standardisiert und somit einfach machbar ist. Zum anderen gibt es auch bereits diverse Libraries für die gängisten Programmiersprachen (bspw. für Python siehe \cite{jobshop2}). Dies macht auch die Umsetzung sehr einfach, da weniger Eigenarbeit nötig ist und auch alle Funktionen bereits vielfach getestet worden sein dürften.
+
+Prinzipiell ist dieser Ansatz deswegen ein sehr vielversprechendes Verfahren. Würde man die im Terminal verfügbaren Ressourcen und Ladehilfsmittel als Maschinen im Sinne des Job-Shop Problems sehen und jeden LKW als Job, welcher durch bestimmt Ressourcen abgearbeitet werden muss, du klingt dies durchaus passend. Auch die Art und Weise des resultierenden Zeitplans ist sicherlich eine sehr gute Darstellung, wie die Belegungszeiten verschiedener Ressourcen eingeteilt werden können. Das große Problem ist allerdings, dass das Job-Shop Verfahren davon ausgeht, dass die Bearbeitung durch die Maschinen nacheinander erfolgt. In dem in dieser Arbeit vorliegenden Problem, müssen die Ressourcen aber immer zeitgleich belegt werden. Es wird beispielsweise immer ein Stapler mit Einweiser zusammen benötigt. Es macht hier keinen Sinn eine Palette zunächst abzuladen und später erst einen Einweiser zu holen. Auch Varianten des JSP bieten hier keine passende Grundlage. Eine entsprechende Abwandlung des Ausgangsproblems würde auch zu einer solch großen Veränderung führen, dass das Ergebnis dann noch mehr viel mit dem angestrebten Ziel dieser Arbeit zu tun hätte. Aus diesem Grund wurde der Ansatz zur Nutzung des JSP nicht weiter verfolgt.
+
+
+\textbf{Constraint Programmierung}
+
+Constraint Programmierung ist ein weiterer sehr interessanter Ansatz, um sich dem vorliegenden Problem zu nähern. Er bietet die Möglichkeit, kombinatorische Probleme zu lösen. Ziel dieses Verfahrens ist es, ein großen Problem, mit einer großen Menge von Lösungen so weit begrenzt, dass eine überschauberere Teilmenge herauskommt. Es gibt dabei Variablen und Einschränkungen (engl. constraints). Solche Constraints sind keine Schritte oder Anweisungen, wie man sie aus gewöhnlichen Programmiersprachen kennt, sondern eher Eigenschaften einer machbaren Lösung. Außerdem ist es möglich sogenannte \glqq{}Soft Constraints\grqq{}, also nicht zwingende, aber wünschenswerte Bedingungen hinzuzufügen. Ein allgemeiner Constraint Solver kann dann genutzt werden, um machbare Werte für die Variablen bzw. eine passende Lösungen zu finden. Es ist hier also neben der Spezifikation von Einschränkungen keine spezielle Programmierung nötig. Implementationen von Constraint Solvern gibt es in diversen Programmiersprachen. \cite{constraintProgramming}
+
+Größtes Problem dieses Verfahrens ist es, dass es in seiner Basis eher um die Prüfung der Machbarkeit, also um das finden einer durchführbaren Lösung geht. Das Optimieren und finden der besten Lösung ist eine zusätzliche Erweiterung. \cite{constraintProgramming} Es gibt durchaus Möglichkeiten, das vorliegende Problemszenario umzusetzen und sicherlich auch eine Optimierung zu finden. Beispielsweise gibt es mit \glqq{}choco-solver\grqq{} \cite{chocoSolver} auch eine sehr gute Java Library. Allerdings erschien es in ersten, sehr kurzen Versuchen mit der Library nicht ganz so einfach, das hier gestellte Problem in Constraints zu erfassen. Sicherlich wäre dies zumindest mit einem grundlegenden Umfang durchaus machbar, allerdings erschien der Zeitaufwand nicht sehr hoch und die im Folgenden beschriebene Lösung vielversprechender, sodass dieses Konzept nach einer Recherche zurückgestellt und nicht weiter umgesetzt wurde.
+
+
+\textbf{Lösung durch Heuristiken}
+\todo{Überarbeiten?!}
+
+Alle bisher betrachteten Verfahren sind eher klassische Optimierungsprobleme, welche für ein Ausgangsproblem mit vorgegebenen Wegen eine Lösung finden. Da diese Verfahren aber alle nicht gut für das hier gegebene Problem geeignet sind, erscheint es als gute und machbare Alternative, Heuristiken zu nutzen.
+
+Heuristiken sind dabei Methoden, über ein analytisches Vorgehen und mit begrenztem Wissen, dennoch eine möglichst gute und zumindest annähernd optimale Lösung zu finden \todo{Quelle}. Auf das vorliegende Problem bezogen könnte man sich also überlegen, wie eine Sortierung der Buchungen vorgenommen werden könnte, sodass mehr Buchungen mit weniger Wartezeit eingeplant werden können, als dies unoptimiert der Fall ist. Klassische Prinzipien sind dabei z.B. \glqq{}Shortest Job Next\grqq{} oder \glqq{}Earlist Deadline First\grqq{}. \todo{Quelle}
+
+Bei diesem Vorgehen ist die eigene Arbeit zur Implementierung höher, da es keine fertige Library gibt, die genau das gewünschte tut. Allerdings gibt es damit auch deutlich Flexibilität, was sehr gut ist, um den Algorithmus an die speziellen Anforderungen dieses Problems anzupassen.
+
+
+\subsubsection{Algorithmus 2: Optimale Reihenfolge für Ladehilfsmittel}
+
+Ein zweiter Weg, die man für das vorliegende Problem eine Optimierung erzielen könnte ist es, die Reihefolge bei der Bearbeitung der LKW so zu gestalten, dass Fahrtzeiten, Rüstzeiten u.ä. möglichst gering gehalten werden. Auch für diesen Fall ist eine gut und vollständige Avisierung essenziell. Ohne entsprechend gute Datenlage, ist es in keinem Fall denkbar eine gute Vorabplanung durchzuführen. Ist nämlich klar, welche LKW kommen, ist auch hier wieder gegeben, welche Ressourcen und Ladehilfsmittel benötigt werden. Wenn außerdem aus Erfahrungswerten bekannt ist, wie lang die Ladezeiten für bestimmte Güter mit den passenden Hilfmittel ist, wie lang Anfahrtzeiten oder Wechsel zwischen bestimmten Hilfsmitteln dauern, so kann eine relativ gute Schätzung abgegeben werden, wie lange es dauert, einen LKW nach einem beliebigen anderen abzuladen. Und genau hier wäre an dieser Stelle das Potenzial zur Optimierung. Durch gezieltes sortieren kann die Gesamtdauer der Bearbeitung reduziert werden. Mussten im unoptimierten Fall z.B. ein LKW per Stapler, dann einer per Kran und danach wieder einer per Stapler abgeladen werden, so musste der Stapler extra wieder wegfahren und hatte zusätzlich Leerlaufzeiten. Im optimierten Fall könnten solche Aufträge direkt nacheinander bearbeitet werden. Muss vielleicht auch nur ein Anbauteil getauscht werden, um weitere Aufträge zu erledigen, so kann dies auch schneller gemacht werden, wenn das entsprechende Fahrzeug ohnehin bereits am Ladeplatz ist.
+
+Die Idee zur Lösung wäre hier, einen Algorithmus zu finden, welcher eben genau dieser Sortierung vornehmen kann. Im einfachsten Fall könnte man dies für einen Ladeplatz machen. Etwas komplexer wird das Problem, wenn zusätzliche Ladeplätze hinzukommen. Hier wird die Herausforderung, gleichzeitig eine möglichst optimale Zuordnung zu den entsprechenden Plätzen zu ermitteln und gleichzeitig innerhalb jedes Platzes die beste Sortierung beizubehalten. Insgesamt ist dieses Szenario ein Problem der kombinatorischen Optimierung\todo{Quelle?}. Zur Lösung dieses speziellen Falls bleiben gar nicht mehr so viele Optionen übrig und es lässt sich sehr schnell ein gut geeignetes Verfahren finden.
+
+\textbf{Lösung durch Heuristiken}
+\todo{Gut? Heuristiken werden auch bei TSP genutzt...}
+
+Was man an dieser Stelle natürlich auch wieder versuchen könnte, wäre mit Heuristiken zu arbeiten. Wie in vielen praxisnahen Anwendungsfällen, lassen sich über Erfahrungswerte sicherlich gute und praxistaugliche Ergebnisse erzielen. So könnte man sicherlich mit einer guten Datenbasis ermitteln, welche Waren sich gut nacheinander abladen lassen und so in der Reihenfolge kombiniert werden können. Allerdings wird dabei auch immer eine relativ große Unsicherheit vorhanden sein, was die Effektivität dieses Verfahrens angeht, da Heuristiken selten das best mögliche Ergebnis erzielen.
+
+\textbf{Anwendung des Traveling Salesman Problems}
+
+Welche Lösung sich in diesem Fall dagegen sehr aufdrängt, ist die Nutzung des Traveling Salesman Problems (für Grundlagen siehe Kapitel \ref{sec:grundlagen_tsp}). Schaut man sich typische Probleme der kombinatorischen Optimierung an, so stellt man schnell fest, dass sich das Ausgangsproblem des TSP sehr gut auf das hier vorliegende Problem übertragen lässt. Sieht man die abzufertigenden LKWs als Knoten eines Graphen, so könnte der Aufwand bzw. die Kosten eines LKW, der nach einem Anderen abgefertigt werden soll, auf den Kanten dargestellt werden. So lässt sich ein vollständiger, gerichteter Graph aufstellen, also ein Graph welcher zwischen allen Knoten zwei Kanten, jeweils eine in jede Richtung hat \cite{graphenEckenKanten}. Auch die Umsetzung für mehrere Ladestellen lässt sich in der Theorie gar nicht so kompliziert lösen. Die Überlegung ist hier, das multiple Traveling Salesmen Problem zur Hilfe zu nehmen. Die Handelsreisenden stehen dabei für die Ladeplätz, bzw. deren Personal, Maschinen und Ressourcen. Mit dem normalen TSP lässt sich ein Ladeplatz bedienen. Durch Anwendung des mTSP lässt sich die gleiche Ausgangslage, also gleiche Buchungen und gleicher Graph mit mehreren Handelsreisenden bedienen. Es ergibt sich der beste Weg, mit mehreren Abladeeinheiten, d.h. auch eine parallele Bearbeitung ist zu möglich.
+
+Das erste Teilproblem bei der Implementierung wäre es dann, eine möglichst gute Kostenberechnung zu machen. Will man nun z.B. die Kosten zum Abladen von LKW Y nach LKW X haben, müsste man eben bedenken, ob für beide das gleiche Geräte gebraucht wird, dann reicht es möglicherweise nur die Abladezeit von LKW von LKW Y zu berücksichtigen. Bedarf es einem Gerätewechsel, so müssten zusätzlich die Abrüstzeiten der Ladehilfsmittel von LKW X und die Aufrüstzeiten der neuen Ladehilfsmittel einbezogen werden. Der zweite Aspekt zur Umsetzung dieses Ansatzes ist das eigentliche Lösen des TSP, also im Endeffekt das finden des kürzesten Weges durch den zuvor aufgestellten Graphen. Hier gibt es auch bereits fertige Algorithmen zur Lösung. Entweder über passende Libraries oder durch manuelle Implementierung kann so durch das Programm eine optimierte Lösung gefunden werden. Abzuwägen ist hier, welcher Algorithmus gut funktioniert. Hier muss der beste Kompromiss zwischen Rechenzeit und Qualität der Lösung gefunden werden. Es ist zu vermuten, dass exakte Algorithmen gerade mit steigender Zahl von LKW ihre Probleme haben werden, sodass hier untersucht werden muss, wie genau die Lösungen heuristischer Verfahren sind.
+
+Insgesamt sollte sich so aber von der Erzeugung eines passenden Graphen aus einer Liste von eingegebenen Avisierungen und einer anschließenden Lösung durch entsprechende Verfahren, ein geeigneter Algorithmus zur Planung der Reihenfolge der LKW entwickeln lassen.
+
+\subsection{Konzeption Algorithmus 1}
+
+Nach der Abwägung von geeigneten Optionen zur Lösung des Problems, folgt nun die konkrete Planung, wie diese Ansätze softwaretechnisch umgesetzt werden können.
+
+Ziel des ersten Prototypen soll es sein, einen Algorithmus zu entwickeln, welcher die benötigten Ressourcen aus einer Menge von avisierten LKW möglichst gut auf die zur Verfügung stehenden aufteilt. Die Implementierung soll dabei in Java erfolgen. Dabei soll in erster Linie der Algorithmus umgesetzt werden und als Proof of Concept zeigen, dass er funktioniert. Dazu reicht es aus, wenn der Algorithmus, bzw. implementierte Varianten als JUnit Tests lauffähig sind. Eine Benutzeroberfläche o.ä. sollen also zum jetzigen Zeitpunkt nicht implementiert werden.
+
+\subsubsection{Klassen und Datenstrukturen}
+
+\subsubsection{Umsetzung} \todo{Erklären: Warum erscheint welches Verfahren sinnvoll (bevor es im praktischen Test ausprobiert wurde)}
+
+Kern der Umsetzung wird es sein, Zeitplanobjekte zu erzeugen. Es muss eine Liste von Zeitplänen geben, für jede Ressource einen. Ein entsprechender Algorithmus muss dann aus der Liste von avisierten LKW jeweils Zeitfenster ermitteln, die jeder Auftrag zum Abarbeiten benötigt. Dabei ist zum einen die Dauer der Abfertigung entscheidend. Diese sollte sich aus den jeweiligen Aufträgen ermitteln lassen. Um eine gute Abschätzung zu erhalten, soll hier als Näherung die Abladezeit pro Gut verwendet werden. Diese soll später aus Erfahrungswerten für jedes Fahrzeug gesetzt werden. Zusätzlich muss aus einer vollständigen Avisierung hervor gehen, welcher HandlingCategory diese angehört. Danach ist genau festgelegt, welche Kategorie welche Ladehilfsmittel und Ressourcen belegt.
+
+Da nun eindeutig klar ist, welche Buchung welche Ressourcen für wie viel Zeit belegt, muss es nun entsprechender Algorithmus entwickelt werden, welcher eine optimale Verteilung auf die verfügbaren Ressourcen vornimmt. Ziel sollte es dabei sein, möglichst wenig Leerlauf der Ressourcen zu haben und die Aufträge so eng wie möglich einzuordnen, dass möglichst viele davon in einem Zeitslot Platz finden. Wie bereits diskutiert, erscheint es hier die beste Lösung zu sein, diese Verteilung auf Basis von Heuristiken vorzunehmen. Es soll also eine systematische Verteilung auf Basis von Erfahrungswerten erfolgen. Da es in der theoretischen Planung sehr schwer ist, abzuschätzen, wie sich ein bestimmtes System in der Praxis verhält, sollen hier die am vielversprechendsten klingenden Konzepte erläutert werden. Im Anschluss sollen diese dann alle implementiert werden. Über entsprechende Tests kann dann verglichen werden, wie viel Verbesserung sich dadurch erzielen lässt, bzw. bei welchen Teilaspekten sich welches System am besten verhält. U.a. kann hier die Zahl der abgefertigten LKW pro Slot verglichen werden, denkbar sind z.B. aber auch Leerlaufzeiten der Ressourcen oder die Performance des jeweiligen Algorithmus.
+
+\todo{Grunsätzliches System zur einordnung in den Zeitplan erklären, also next possible window etc?}
+
+
+Nachfolgend sollen einmal alle denkbaren Verfahren zur Sortierung des Zeitplans beschrieben werden. Dafür wird die beispielhafte Liste der Avisierungen aus Tabelle \ref{tab:exampleAdvices} verwendet und jeweils gezeigt, wie nach die Sortierung nach diesen Verfahren auf einen gleichbleibende Menge von Ressourcen aussehen würde. Die jeweiligen Verfahren wurden dabei aus der genaueren Betrachtung der Anforderungen bzw. aus möglichen Optimierungszielen ermittelt.
+
+\begin{table}[!h]
+\begin{center}
+\caption{Beispielhafte Liste von LKW Avisierungen für einen Slot}
+\label{tab:exampleAdvices}
+\begin{tabular}{c|c|c} 
+    LKW & benötigte Ressourcen & Dauer (min) \\\hline
+    1 & Stapler, Fahrer, Einweiser & 12 \\\hline
+    2 & Kran, Einweiser & 15 \\\hline
+    3 & Fahrer, Einweiser & 5 \\\hline
+    4 & Fahrer, Einweiser & 5 \\\hline
+    5 & Reachstacker, Fahrer & 8 \\
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{Smallest window next (smallest job next?!)} \todo{SJN erklären}
+
+Ein erstes Verfahren, welches sinnvoll erscheint, ist die Verteilung der Aufträge nach dem \glqq{}Shortest Jobs Next\grqq{}-Prinzip. Hierbei würde für jeden LKW die Bearbeitungsdauer ermittelt werden und jeweils nacheinander die LKW von der kleinsten zur größten Dauer an den nächsten jeweils passenden Zeitpunkt wo alle benötigten Ressourcen frei sind, einsortiert werden. Eine beispielhafte Verteilung der LKW ist in Abbildung \ref{fig:rsSjnExample} dargestellt. Der Vorteil, weshalb dieses Verfahren vor allem sinnvoll erscheint, ist, so schnell möglichst viele LKW abgearbeitet werden. Alle Aufträge, welche schnell zu erledigen sind, werden direkt abgearbeitet und die potenzielle Wartezeit der LKW Fahrer minimiert.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/timelines/rsShortestJobNextExample.png}
+    \caption{Planung der LKW aus Tabelle \ref{tab:exampleAdvices} nach dem Shortest Job Next Prinzip}
+    \label{fig:rsSjnExample}
+\end{figure}
+
+Für das gezeigte Beispiel würde das bedeuten, dass diese nach ihrer Bearbeitungsdauer sortiert bearbeitet werden. Zunächst LKW 3 und danach LKW 4, da diese beide den Fahrer brauchen und so nicht parallel arbeiten können. LKW 5 kommt anschließend und braucht ebenfalls einen Fahrer. LKW 1 würde dann verplant werden, kann aber parallel zu LKW 2 laufen, da hier keine überschneidenden Ressourcen benötigt werden, bzw. es zwei Einweiser gibt.
+
+
+\textbf{Biggest window next (smallest/biggest job next?!)}
+
+\textbf{Most idle time next}
+
+Ein Hauptziel der Optimierung ist die Reduzierung der Leerlaufzeiten und dadurch eine schnellere und effizientere Abarbeitung der Aufgaben. Eine weitere Idee, um eine möglichst gleichmäßige Auslastung der Ressourcen zu erreichen, wäre es also, immer den Auftrag als nächstes einzuplanen, der die Ressource mit der bis dahin größten Leerlaufzeit benötigt.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/timelines/rsMostIdleExample.png}
+    \caption{Planung der LKW aus Tabelle \ref{tab:exampleAdvices} nach dem Most idle time next Prinzip}
+    \label{fig:rsMitnExample}
+\end{figure}
+
+Für das vorliegende Beispiel  (Abb. \ref{fig:rsMitnExample}) würde dies folgendes bedeuten: Für den Beginn könnte man nach dem first come, first served Prinzip arbeiten, da sind eben alle Ressourcen noch frei. Anschließend sind Kran und Einweiser noch ganz frei, sodass LKW 2 als nächstes kommen würde. Das gleiche gilt danach für den Reachstacker und LKW 5 und schlussendlich wären dann die Einweiser am wenigsten belegt, sodass LKW 4 und LKW 5 anschließend abgeladen werden.
+
+\textbf{First come, first served}
+
+Ein letztes Konzept, welches kein so systematisches Prinzip hat, wäre das die Abarbeitung in der Reihenfolge ihrer Buchung bzw. in einer zufälligen Reihenfolge. Idee könnte hier sein, dass sich dadurch Ungleichheiten ausgleichen und durch die Zufallskomponente eine gut durchmischte und gleichmäßige Verteilung entsteht. Bei den anderen Verfahren, insbesondere \glqq{}Shortest Job Next\grqq{} wäre zu untersuchen, wie gut und gleichmäßig die Verteilung nach solchen Prinzipien wird. Möglicherweise könnten sich Probleme ergeben, dass LKWs gleicher Ladekategorie tendenziell immer kürzer sind und somit viele Ressourcen eines Typs ausgelastet werden, während andere viel Leerlauf behalten.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/timelines/rsFcfsExample.png}
+    \caption{Planung der LKW aus Tabelle \ref{tab:exampleAdvices} nach dem Fist come, first served Prinzip}
+    \label{fig:rsFcfsExample}
+\end{figure}
+
+Für das hier gezeigte Beispiel (Abb. \ref{fig:rsFcfsExample}) würde dies bedeuten, dass LKW 1 und LKW 2 parallel laufen können und somit schon eine gute Auslastung der Ressourcen in der ersten Zeit ergeben. LKW 3, 4 und 5 müssten dann nacheinander abgearbeitet werden, da alle einen Fahrer benötigen.
+
+
+
+\todo{Weitere Verfahren?}
+
+\subsubsection{Vergleichswerte zur Auswertung generieren}
+
+Um eine gute Bewertung der zuvor geplanten Sortierungsverfahren anstellen zu können, wäre es von Vorteil, Daten als Ausgangszustand zu haben. Da es allerdings kaum Datensätze gibt, die darstellen würde, wie LKW aktuell Verteilt werden, wäre die Idee an dieser Stelle, zusätzlich ein Verfahren zu entwickelt, welches den Zeitplan so erzeugen kann, wie es vermutlich im aktuellen und nicht optimierten Zustand erfolgen würde. Dann ließen sich Vorher-Nachher Vergleiche ziehen und eine genauere Bewertung vornehmen.
+
+Ausgangspunkte, wie eine solche Sortierung aussehen würde, wäre, dass LKW innerhalb ihres gebuchten Slots kommen, wann sie wollen, d.h. aus Hafensicht gesehen in zufälliger Reihenfolge. Die Abarbeitung würde also nach dem \glqq{}first come, first served\grqq{} Prinzip erfolgen. Erschwerend kommt allerdings noch hinzu, dass die LKW wie erwähnt nicht alle direkt bereit stehen, sondern zusätzlich noch zu einem aus Hafensicht zufälligen Zeitpunkt erscheinen, wodurch eine sehr lückenhafte Verteilung mit vielen Leerlaufzeiten der Ressourcen entsteht. Um dieses Sachverhalt zu implementieren wäre es also die Idee, sowohl die Reihenfolge der LKW Avisierungen, als auch jeweils einen Ankunftszeitpunkt innerhalb des Slots zufällig zu bestimmen. Anschließend kann jeder LKW zu seinen benötigten Ressourcen zugeteilt werden, entweder sobald er ankommt oder spätestens, wenn alle von ihm benötigten Ressourcen verfügbar sind. 
+
+
+\subsection{Konzeption Algorithmus 2}
+
+Wie auch schon Variante 1, soll auch dieser Prototyp in Java umgesetzt werden. Auch hier geht es hauptsächlich darum, die Algorithmen und Hintergrundlogik zu implementieren und weniger darum, schöne Benutzeroberflächen für direkte Benutzerein- und ausgaben zu schaffen. Auch die Erfassung der Daten von Fahrern und Speditionen soll nicht Teil er Implementierung sein, also auch nicht die Sammlung von Avisierungen für die Slots o.ä. Stattdessen erfolgt der Aufruf der Algorithmen über JUnit Testfälle. Hier soll mit gezielten oder generierten Eingabedaten gearbeitet werden und damit die Optimierung entsprechend durchgeführt werden.
+
+\subsubsection{Klassen und Datenstrukturen}
+
+\textbf{TruckAdvice}: Alle vom LKW Fahrer bzw. von der Spedition bei der Avisierung zu erfassenden Daten
+\begin{itemize}
+  \item goodType
+  \item numberOfGoods
+  \item description
+  \item handlingCategory
+  \todo{Länge, Breite, Höhe, Gewicht, ...?}
+\end{itemize}
+
+\textbf{GoodType}
+
+\textbf{GoodType}
+
+\textbf{HandlingCategory}
+
+\textbf{HandlingMachines}
+
+
+\subsubsection{Umsetzung}
+
+Der das grundsätzliche Verfahren, nachdem eine Liste aller Avisierungen (TruckAdvice-Objekte) erfasst wurde ist in Abbildung \ref{fig:flowchart_tsp_algorithm} dargestellt.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/Flowchart TSP Algorithm.png}
+    \caption{Ablaufdiagramm der Lösung mittels TSP}
+    \label{fig:flowchart_tsp_algorithm}
+\end{figure}
+
+\subsubsection{Berechnung eines Graphen}
+
+Zunächst einmal kann aus den gegebenen Daten ein vollständiger, gerichteter Graph erzeugt werden, bzw. in der Implementierung kann dieser als zweidimentionale Matrix dargestellt werde. Dabei ist jeder Knoten ein Auftrag aus der eingegebenen Liste. Für die Kanten wird eine Methode benötigt, die die Kosten bzw. Aufwände berechnen kann, welche benötigt werden, um einen beliebigen LKW nach einem Anderen abzufertigen. Um eine vergleichbare Einheit zu haben, wird hier immer mit Zeit in Minuten gearbeitet. Aus der bei der Datenerfassung ermittelten \textit{HandlingCategory} kann jeweils bestimmt werden, welche Ladehilfsmittel (HandlingMachines) und Ressourcen benötigt werden. Zu jedem Hilfsmittel sind in dem System entsprechende Zeiten hinterlegt. Für das hier zu erstellende Proof of Concept sollen das zunächst Anfahrt/Aufbauzeit, Ladezeit pro Gut sowie Abbau/Abfahrtszeit sein \todo{Komplexere Kostenberechnung?!}. Denkbar wären hier allerdings auch deutlich komplexere Berechnungen und Einflussfaktoren. Beispielsweise unterschiedliche Wechselaufwände, je nachdem zu welcher Maschine gewechselt wird. Um die Komplexität an dieser Stelle nicht zu hoch werden zu lassen, werden die Kosten zum Abfertigen von LKW B nach LKW A nach folgendem Schema berechnet:
+
+Gleiche Maschine für A und B?\\
+$\rightarrow Zeit_{AB} = numberOfGoods_B * ZeitProGut_B$
+
+Ist ein Wechsel der Maschine nötig?\\
+$\rightarrow Zeit_{AB} = Abbauzeit_A + Aufbauzeit_B + numberOfGoods_B * ZeitProGut_B$
+
+Ein so erzeugter Graph bzw. dessen interne Darstellung als Matrix könnten wie in den Abbildungen \ref{fig:example_tsp_graph} und \ref{fig:example_tsp_matrix} aussehen.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.6\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{images/ExampleTSPGraph.png}
+  \caption{Beispielhafte Darstellung von TruckAdvices mit Zeitaufwänden als Graph}
+  \label{fig:example_tsp_graph}
+\end{minipage}%
+\begin{minipage}{.4\textwidth}
+  \centering
+    \[
+    \begin{matrix}
+         & A & B & C\\
+        A & \infty & Zeit_{AB} & Zeit_{AC}\\
+        B & Zeit_{BA} & \infty & Zeit_{BC}\\
+        C & Zeit_{CA} & Zeit_{CB} & \infty
+    \end{matrix}
+    \]
+  \caption{Zu Abb. \ref{fig:example_tsp_graph} passende Matrix}
+  \label{fig:example_tsp_matrix}
+\end{minipage}
+\end{figure}
+\todo{Matrix als Abb bezeichnen ok? evtl ändern...}
+
+
+
+
+
+
+
+
+
+\subsubsection{TSP Lösungsverfahren}
+\label{sec:tspVerfahrenPlanung}
+\todo{Problem: Sehr unterschiedlich lange Zeit je Slot erwähnen und Lösung beschreiben}
+
+Der zweite und wesentliche Schritt zur Optimierung ist nun die Lösung des TSP, also das finden eines möglichst kurzen Weges durch den zuvor erzeugten Graphen. Mit Blick auf das zu erzielende Ergebnis, fällt auf, dass das nach dem standardmäßigen TSP für einen Handlungsreisenden eine Kette von Stationen erzeugt würde. Übertragen auf das vorliegende Problem heißt das, dass aus allen Buchungen ein Zeitplan für einen einzigen Ladeplatz erzeugt wird. Dies ist zunächst auch ein gutes Zwischenergebnis und erfüllt schon einmal viele zuvor gesetzte Anforderungen. Um allerdings eine praxisnäheres Szenario abzubilden, wäre die Erweiterung auf mehrere Ladeplätze ein nicht ganz uninteressanter Punkt, um diesen hier bei der Planung ebenfalls umzusetzen. Dies ist bei genauerer Auseinandersetzung mit dem TSP und dessen Varianten auf den ersten Blick kein allzu großes Problem mehr. Für diesen Anwendungsfall dürfte nämlich das mTSP geeignet sein \cite{mtsp}. Hier werden statt einem Handlungsreisenden mehrere auf das gleiche Szenario angesetzt, die dann die Stationen unter sich aufteilen und parallel abarbeiten können. Dadurch ist die Vorarbeit die selbe, nur über die Anzahl von Handlungsreisenden kann nun entschieden werden, für wie viele Ladeplätze die Optimierung erfolgen soll.
+
+Rein aus dieser theoretischen Sicht ist das TSP bzw. mTSP gar nicht so schwer zu verstehen und auf das vorliegende Problem zu übertragen. Für die Implementierung und somit den haupt Lösungsschritt aus dem Ablaufdiagramm (Abb. \ref{fig:flowchart_tsp_algorithm}), müssen nun allerdings passende Lösungsverfahren gefunden werden. Hier lassen sich für das normale TSP auch noch überschaubare Verfahren finden. Sehr viel komplizierter wird es bei der Lösung des mTSP. Hier sind die Verfahren sehr viel komplexer und schwieriger. Nach einiger Recherche als noch überschaubar und vom Aufwand her umsetzbar hat sich die Überführung von mTSP in normale TSP dargestellt. Dies hat den sehr großen Vorteil, dass zur Findung des besten Weges anschließend die ganz normalen, bekannteren und einfacheren Verfahren zur Lösung von TSP genutzt werden können. \cite{mtsp, mtspAlgosAndTransform}
+
+\todo[inline]{Exkurs Transformation von mTSP zu TSP, wohin?}
+
+
+Aus Softwaresicht muss nun also ein passendes Verfahren zur Lösung des TSP implementiert werden. Da Quellen mit passenden Implementierungen gefunden wurden, soll eine manuelle Implementierung, ohne Libraries erfolgen. Gleichzeitig lässt sich so eine bessere Kontrolle und Anpassbarkeit auf das vorliegende Problem erzielen und auch die Verfahren sind so besser verständlich. \todo{Evtl. auch nochmal mit Library probieren?} Da es einige verschiedene Algorithmen und Ansätze zur Lösung gibt, sollen hier mehrere implementiert werden, um diese anschließend zu vergleichen. Die nachfolgende Auswahl besteht dabei aus den bekanntesten Methoden und solchen, bei denen das Verhältnis zwischen Aufwand der Implementierung und Qualität des Ergebnisses am besten erschienen.
+
+\textbf{brute-force Methode}
+
+Zum einen sollen hier exakte Verfahren betrachtet werden. Der ineffizienteste und aufwändigste Weg, wäre die \textit{brute-force Methode}, d.h. alle möglichen Lösungswege durchgehen, deren Länge berechnen und immer wieder schauen, ob ein kürzerer gefunden wurde. Die Implementierung wäre vermutlich nicht allzu kompliziert, allerdings wird diese Methode sehr schnell an ihre Leistungsgrenze kommen. Da es hier wirklich offensichtlich bessere Ansätze gibt, wird dieser Weg aber nicht verfolgt. \cite{oracleTsp}
+
+\textbf{Branch and Bound}
+\todo{Beschreibung/Erklärung in Quelle \cite{constraintProgramming}, Seriöse Quellen hinzufügen, evtl. erweitern und überarbeiten}
+
+Besser geeignet erscheint dagegen das Branch-and-Bound Verfahren. Von der Grundidee ist dieses sehr ähnlich zum brute-forcing, allerdings wird hier der kürzest mögliche Weg berechnet. Anschließend können dann per Ausschlussverfahren schon frühzeitig einige längere Wege ausgeschlossen werden, sodass der Gesamtaufwand der Berechnung verkürzt wird. \cite{travelingSalesman}
+
+Das Prinzip dabei ist es, für jeden betrachteten Knoten eine \glqq{}Bound\grqq{}, also Grenze für einen Wert für die bestmögliche Lösung beim Weiterverfolgen der angrenzenden Knoten. Anhand dessen kann dann beim durchgehen der Äste und Möglichkeiten des Graphen entschieden werden, ob es sich im Vergleich zur insgesamt besten Lösung lohnt, die vorliegende Option weiter zu verfolgen oder ob diese bereits jetzt zu teuer ist und verworfen werden kann. Die minimalen Kosten können dabei berechnet werden, indem von allen Knoten die Kosten der kleinsten Kante und die der zweitkleinsten Kante summiert werden und das Gesamtergebnis halbiert wird. Die Halbierung wird vorgenommen, da jede Kante zweimal vorkommt. \cite{geeksForGeeksBnB}
+
+\textbf{Reduced Matrix}
+\todo{Bessere Quellen hinzufügen, Erklärungen Überarbeiten?}
+
+Ein weiteres interessantes und exaktes Verfahren ist die Reduced-Matrix Methode. Diese ähnelt sehr dem Prinzip der Branch and Bound Methode, hierbei wird die optimale Lösung allerdings rechnerisch über die Umformung von Matrizen ermittelt. 
+
+Das Prinzip hier ist es, dass die Zeilen und Spalten der Kostenmatrix reduziert werden können. Es wird dafür Zeile für Zeile und anschließend Spalte für Spalte durchgegangen. Enthalten diese jeweils keinen 0-Wert, so kann von allen Werten der jeweils kleinste abgezogen werden. Summiert man die Werte jeder Zeile und jeder Spalte, welche reduziert wurden, so ergiben sich die minimalen Kosten für diesen (Teil-)Graphen. \cite{geeksForGeeksRm}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+  \centering
+  \[
+    \begin{matrix}
+          & 1 & 2 & 3 & 4\\
+        1 & \infty & 10 & 15 & 20\\
+        2 & 10 & \infty & 35 & 25\\
+        3 & 15 & 35 & \infty & 30\\
+        4 & 20 & 25 & 30 & \infty\\
+    \end{matrix}
+    \]
+    \caption{Initiale Matrix \cite{geeksForGeeksRm}}
+    \label{fig:reduced_matrix_initial}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+   \[
+    \begin{matrix}
+          & 1 & 2 & 3 & 4\\
+        1 & \infty & 0 & 5 & 10\\
+        2 & 0 & \infty & 25 & 15\\
+        3 & 0 & 20 & \infty & 15\\
+        4 & 0 & 5 & 10 & \infty\\
+    \end{matrix}
+    \]
+    \caption{Reduzierte Matrix aus Abb. \ref{fig:reduced_matrix_initial} \cite{geeksForGeeksRm}}
+    \label{fig:reduced_matrix_reduced}
+\end{minipage}
+\end{figure}
+
+Die Zeilen wurden jeweils um 10, 10, 15, 20 reduziert und die Spalten dann um 0, 0, 5, 10. So ergibt sich minimale Kosten für den gesamten Graphen von 10 + 10 + 15 + 20 + 5 + 10 = 70. Um im Baum fortzuschreiten kann die Matrix anschließend für jede Kante weiter reduziert werden. Um beispielsweise von Knoten 1 zu 2 zu kommen, werden die Werte der ersten Zeile und zweiten Spalte durch unendlich ersetzt und die Matrix erneut reduziert. 
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+  \centering
+  \[
+    \begin{matrix}
+          & 1 & 2 & 3 & 4\\
+        1 & \infty & \infty & \infty & \infty\\
+        2 & 10 & \infty & 35 & 25\\
+        3 & 15 & \infty & \infty & 30\\
+        4 & 20 & \infty & 30 & \infty\\
+    \end{matrix}
+    \]
+    \caption{Matrix des Schritts von Knoten 1 zu Knoten 2 \cite{geeksForGeeksRm}}
+    \label{fig:reduced_matrix_1-2}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+   \[
+    \begin{matrix}
+          & 1 & 2 & 3 & 4\\
+        1 & \infty & \infty & \infty & \infty\\
+        2 & 0 & \infty & 10 & 0\\
+        3 & 0 & \infty & \infty & 5\\
+        4 & 0 & \infty & 0 & \infty\\
+    \end{matrix}
+    \]
+    \caption{Reduzierte Matrix aus Abb. \ref{fig:reduced_matrix_1-2} \cite{geeksForGeeksRm}}
+    \label{fig:reduced_matrix_1-2_reduced}
+\end{minipage}
+\end{figure}
+
+
+Hier wird um 5, 0 und 0 bzw. um 0, 5 und 0 reduziert. Die Kosten der Reduktion von 10 können dann auf die zuvor ermittelten 70 addiert werden, um die minimalen Kosten im Baum zu erhalten.
+
+
+So lässt sich aus dem beispielhaften Graphen (Abb. \ref{fig:reducedMatrixGraph}) im Endeffekt folgender Baum (Abb. \ref{fig:reducedMatrixTree}) bestimmt. Einige Äste mussten dabei nicht weiter verfolgt werden, da sie schon zum betrachteten Zeitpunkt nicht weniger Kosten würden als andere. Es zeigt sich, dass die Wege 1>3>4>2 und 1>2>4>3 die kürzesten sind. Zum Vorteil wird hier auch ausgenutzt, dass für das TSP immer geschlossene Pfade gesucht werden, d.h. hier ist es irrelevant mit welchem Knoten begonnen wird, es kann einfach mit einem beliebigen Knoten, in diesem Fall Knoten 1 gestartet werden. \cite{geeksForGeeksRm}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.4\textwidth}
+  \centering
+
+    \includegraphics[width=\textwidth]{images/reducedMatrixGraph.png}
+    \caption{Beispielhafter Graph}
+    \label{fig:reducedMatrixGraph}
+
+\end{minipage}%
+\begin{minipage}{.6\textwidth}
+  \centering
+    \includegraphics[width=\textwidth]{images/reducedMatrixTree.png}
+    \caption{Alle mit der reduced Matrix Methode betracheteten Pfade}
+    \label{fig:reducedMatrixTree}
+\end{minipage}
+\end{figure}
+
+
+\textbf{Simulated Annealing}
+\todo{Basiert auf: https://www.baeldung.com/java-simulated-annealing-for-traveling-salesman}
+
+Ein weiterer Blick lohnt sich allerdings auch auf die heuristischen Verfahren. Im Gegensatz zu den zuvor beschriebenen, exakten Varianten, wird es hier nicht garantiert das beste Ergebnis geben. Allerdings wird es in den meisten Fällen dem besten Ergebnis sehr nahe kommen. Der große Vorteil könnte dafür allerdings sein, dass die Rechenzeit deutlich verringert wird. Dies könnte vor allem ein wichtiger Kompromiss sein, da die Größe der durch die anderen Verfahren lösbaren Graphen sehr begrenzt sein wird, gerade mit überschaubaren Rechenressourcen. Mit dem Simulated Annealing Ansatz sollte der Rechnenaufwand um ein vielfaches geringer sein und damit auch die Größe von möglichen Graphen deutlich steigen.
+
+Ein bekanntes Verfahren ist hier das Simulated Annealing. Den Aufwand für jede Wegkombination im Graphen des TSP lässt kann man sich als kontinuierliche Funktion vorstellen. Ziel ist es dabei grundsätzlich das globale Optimum, also den kleines Wert über alle Möglichkeiten zu finden. Im Gegensatz zu den vorherigen Varianten, welche alle Möglichkeiten durchgehen, ist hier die Idee, sich dem besten Ergebnis durch ausprobieren bestimmter Möglichkeiten anzunähern. Dabei fängt man mit einer zufälligen Reihenfolge an. Nach jedem Versuch führt man kann man unterschiedliche, zufällige Operationen an der Reihenfolge durchführen, u.a. Tauschen von zwei Knoten, Verschieben eines Knotens. Auch die Nutzung von 2-Opt oder 3-Opt-Heuristiken ist denkbar. Hier werden zwei oder drei Kanten zwischen Knoten getrennt und untereinander neu verbunden, sodass sich einer neuer Pfad ergibt. Durch erneute Berechnung des Aufwand kann nun geschaut werden, ob sich das Ergebnis verbessert hat, dann wird dies als neuer Ausgangspunkt genutzt, andernfalls wird es verworfen. Durch Wiederholung dieses Vorgangs sollte sich das Ergebnis einem Optimum annähern. Es kann allerdings sein, dass dies ein lokales und kein globales Optimum ist. Hier kommt der eigentliche Trick des Simulated Annealings ins Spiel, es wird mit einer \glqq{}Temperatur\grqq{} gearbeitet. Durch eine exponentielle Funktion wird unter bestimmten Umständen doch das schlechtere Ergebnis gespeichert und die Möglichkeit geschaffen, aus dem lokalen Optimum auszubrechen. Durch senken der Temperatur im Verlauf der versuche wird diese Wahrscheinlichkeit geringer. Dieses Verfahren hat man sich von Abkühlungsprozesses aus der Natur abgeschaut. \cite{tspSimulatedAnnealing}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/flowSimulatedAnnealing.png}
+    \caption{Ablauf von Simulated Annealing \cite{tspSimulatedAnnealing}}
+    \label{fig:flowchart_simulated_annealing}
+\end{figure}
+
+Der Ablauf eines Simulated Annealing Prozesses ist in Abbildung \ref{fig:flowchart_simulated_annealing} dargestellt. Der Nachteil dieses Verfahrens ist, dass es mehrere Parameter gibt, die eingestellt werden müssen. So gibt es eine Maximalanzahl von Schleifendurchläufen, eine Starttemperatur und eine Abkühlungsrate. All diese Werte beeinflussen das Ergebnis. Komplexere Implementierungen können diese Werte selbst anpassen, eine manuelle Einstellung ist oft nicht so einfach und passiert eher nach dem \glqq{}trail and error\grqq{}-Prinzip. \cite{tspSimulatedAnnealing}
+
+Insgesamt scheint die diese Variante zur Lösung allerdings vielversprechende Ergebnisse zu liefern und auch keine allzu komplexe Implementierung darzustellen.
+
+
+\subsubsection{Transformation eines mTSP zu einem TSP}
+\label{sec:mstpTransofrmation}
+
+Um ein mTSP in ein einfaches TSP umzuwandeln, fügt man dem Graphen fiktive Knoten für die Startpunkte der Handlungsreisenden hinzu. Für ein beispielhaftes Problem aus n=9 Knoten und m=2 Handlungsreisenden fügt man m-1, also noch einen fiktiven Knoten hinzu. Ein Knoten wird ebenfalls fest als Startpunkt eines Handelsreisenden definiert. Das genannte Beispiel ist in Abbildung \ref{fig:mtsp_tranformation} zu sehen, wobei Knoten 1 der definierte Startpunkt und Knoten 10 der hinzugefügte, fiktive Knoten ist. Im Vergleich der Ausgangsmatrix (Abbildung \ref{fig:mtsp_distance_matrix}) und der erweiterten Maxtrix (Abbildung \ref{fig:mtsp_distance_matrix_with_dummys}) zu sehen ist, werden die Gewichte zwischen den Startpunkten sehr hoch gesetzt, wie es auch schon in der Diagonale zwischen Identischen Knoten der Fall ist, sodass kein Reisen direkt zwischen Startpunkten möglich ist. Ein Nachteil ist allerdings, dass die Größe des Graphen bzw. der Matrix ansteigt und dadurch der Lösungsaufwand erhöht wird, welcher mit steigender Zahl von Knoten ohnehin schon exponentiell steigt. \cite{mtsp, mtspTransform2}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/mtspTransformation.png}
+    \caption{Lösung eines mTSP und Transformation zu TSP \cite{mtspTransform2}}
+    \label{fig:mtsp_tranformation}
+\end{figure}
+
+\setcounter{MaxMatrixCols}{20}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.44\textwidth}
+  \centering
+  \begin{footnotesize}
+    \[
+    \setlength{\arraycolsep}{0.1cm}
+    \begin{matrix}
+          & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\\
+        1 & 999 & 7 & 15 & 9 & 10 & 6 & 8 & 9 & 10\\
+        2 & 11 & 999 & 8 & 7 & 11 & 3 & 6 & 4 & 3\\
+        3 & 15 & 5 & 999 & 16 & 12 & 5 & 8 & 13 & 4\\
+        4 & 2 & 5 & 11 & 999 & 9 & 13 & 14 & 4 & 2\\
+        5 & 8 & 6 & 3 & 5 & 999 & 6 & 7 & 10 & 9\\
+        6 & 6 & 13 & 8 & 11 & 5 & 999 & 5 & 4 & 5\\
+        7 & 5 & 15 & 3 & 7 & 12 & 6 & 999 & 8 & 9\\
+        8 & 9 & 3 & 9 & 14 & 3 & 11 & 8 & 999 & 10\\
+        9 & 11 & 16 & 3 & 9 & 10 & 7 & 9 & 10 & 999\\
+        &&&&&&&&&
+    \end{matrix}
+    \]
+    \end{footnotesize}
+  \caption{Distanzmatrix}
+  \label{fig:mtspMatrix1}
+\end{subfigure}
+\begin{subfigure}{.54\textwidth}
+  \centering
+  \begin{footnotesize}
+  \[
+  \setlength{\arraycolsep}{0.1cm}
+    \begin{matrix}
+          & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\
+        1 & 999 & 7 & 15 & 9 & 10 & 6 & 8 & 9 & 10 & 999\\
+        2 & 11 & 999 & 8 & 7 & 11 & 3 & 6 & 4 & 3 & 11\\
+        3 & 15 & 5 & 999 & 16 & 12 & 5 & 8 & 13 & 4 & 15\\
+        4 & 2 & 5 & 11 & 999 & 9 & 13 & 14 & 4 & 2 & 2\\
+        5 & 8 & 6 & 3 & 5 & 999 & 6 & 7 & 10 & 9 & 8\\
+        6 & 6 & 13 & 8 & 11 & 5 & 999 & 5 & 4 & 5 & 6\\
+        7 & 5 & 15 & 3 & 7 & 12 & 6 & 999 & 8 & 9 & 5\\
+        8 & 9 & 3 & 9 & 14 & 3 & 11 & 8 & 999 & 10 & 9\\
+        9 & 11 & 16 & 3 & 9 & 10 & 7 & 9 & 10 & 999 & 11\\
+        10 & 999 & 7 & 15 & 9 & 10 & 6 & 8 & 9 & 10 & 999\\
+    \end{matrix}
+    \]
+    \end{footnotesize}
+  \caption{Erweiterte Distanzmatrix}
+  \label{fig:mtspMatrix2}
+\end{subfigure}
+
+\caption{Distanzmatrixen zum Beispiel in Abb. \ref{fig:mtsp_tranformation} \cite{mtspTransform2}}
+\label{fig:mtspMatricies}
+\end{figure}
+
+\begin{comment}
+
+\begin{figure}[H]
+    \centering
+    \begin{small}
+    \[
+    \begin{matrix}
+          & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\\
+        1 & 999 & 7 & 15 & 9 & 10 & 6 & 8 & 9 & 10\\
+        2 & 11 & 999 & 8 & 7 & 11 & 3 & 6 & 4 & 3\\
+        3 & 15 & 5 & 999 & 16 & 12 & 5 & 8 & 13 & 4\\
+        4 & 2 & 5 & 11 & 999 & 9 & 13 & 14 & 4 & 2\\
+        5 & 8 & 6 & 3 & 5 & 999 & 6 & 7 & 10 & 9\\
+        6 & 6 & 13 & 8 & 11 & 5 & 999 & 5 & 4 & 5\\
+        7 & 5 & 15 & 3 & 7 & 12 & 6 & 999 & 8 & 9\\
+        8 & 9 & 3 & 9 & 14 & 3 & 11 & 8 & 999 & 10\\
+        9 & 11 & 16 & 3 & 9 & 10 & 7 & 9 & 10 & 999
+    \end{matrix}
+    \]
+    \end{small}
+    \caption{Distanzmatrix des mTSP Beispiels \cite{mtspTransform2}}
+    \label{fig:mtsp_distance_matrix}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \[
+    \begin{matrix}
+          & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\
+        1 & 999 & 7 & 15 & 9 & 10 & 6 & 8 & 9 & 10 & 999\\
+        2 & 11 & 999 & 8 & 7 & 11 & 3 & 6 & 4 & 3 & 11\\
+        3 & 15 & 5 & 999 & 16 & 12 & 5 & 8 & 13 & 4 & 15\\
+        4 & 2 & 5 & 11 & 999 & 9 & 13 & 14 & 4 & 2 & 2\\
+        5 & 8 & 6 & 3 & 5 & 999 & 6 & 7 & 10 & 9 & 8\\
+        6 & 6 & 13 & 8 & 11 & 5 & 999 & 5 & 4 & 5 & 6\\
+        7 & 5 & 15 & 3 & 7 & 12 & 6 & 999 & 8 & 9 & 5\\
+        8 & 9 & 3 & 9 & 14 & 3 & 11 & 8 & 999 & 10 & 9\\
+        9 & 11 & 16 & 3 & 9 & 10 & 7 & 9 & 10 & 999 & 11\\
+        10 & 999 & 7 & 15 & 9 & 10 & 6 & 8 & 9 & 10 & 999\\
+    \end{matrix}
+    \]
+  \caption{Erweiterte Distanzmatrix aus Abb. \ref{fig:mtsp_distance_matrix}  \cite{mtspTransform2}}
+  \label{fig:mtsp_distance_matrix_with_dummys}
+\end{figure}
+
+\end{comment}
+
+\subsubsection{Umwandlung der TSP Lösung in einen Zeitplan}
+\label{sec:tspToSchedule}
+
+Nachdem ein nun also eine Reihenfolge gefunden wurde, in der die LKW sich am schnellsten bearbeiten lassen, muss daraus ein Zeitplan erstellt werden. Da es bereits eine Methode gibt, um die Zeiten zwischen den LKW zu berechnen, ist es nicht mehr schwierig, jeweils die Zeitpunkte zu bestimmen, in denen jeder LKW am Terminal erscheinen muss.
+
+Eine Herausforderung, die sich bei der Planung für mehrere Ladeplätze mittels mTSP ergeben wird, ist, dass dieses Verfahren zwar die kürzeste Gesamtzeit berechnet, die Anzahl der Aufträge bzw. der Zeitaufwand pro Ladeplatz wird allerdings nicht unbedingt gleichmäßig verteilt sein. Es wird oft der Fall sein, dass ein Ladeplatz deutlich mehr Zeit benötigt, als ein anderer. Hinzu kommt, dass nicht unbedingt gewährleistet ist, dass alle Buchungen, die für einen Slot aufgenommen wurden auch in diesen hinein passen. Ein Beispielzeitplan, wie er möglicherweise durch die Lösung des mTSP erzeugt wird, ist in Abbildung \ref{fig:tspCutExample1} zu sehen. Ein Ansatz zur Lösung dieses Problems ist es, die über das Slotende hinausragenden Zeiträume abzuschneiden und auf eventuelle Lücken zu verteilen. Dadurch wird sich die Gesamtdauer der Abfertigung sicherlich verschlechtern und die Reihenfolge wird nicht mehr ganz optimal sein, dennoch ist dies besser als große, gänzlich ungenutzt Zeiträume bei einigen Ladeplätzen zu haben. Um den Vorteil der bereits durchgeführten Optimierung allerdings möglichst gut zu erhalten, wäre die Idee hier, alle überschüssigen Ketten von nacheinander sortierten LKW abzuschneiden und so wie sie sind in eine möglichst passende Lücke eines anderen Ladeplatzes zu schieben. So würden zumindest diese LKW in ihrer Reihenfolge optimal bearbeitet werden können. Nicht mehr passende Abschnitte bleiben dann eben übrig und können nicht mehr verplant werden. Würde man diesen Plan Schritt für Schritt mit jeder Avisierung erneuern, wäre hier der Zeitpunkt wo der Zeitplan dann eben gefüllt ist und für den letzten LKW der passende Slot nicht mehr angeboten wird. \todo{Satz an dieser Stelle lassen?}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/timelines/timelineTspCutExample1.png}
+    \caption{Beispiel für einen per mTSP sortierten Zeitplan}
+    \label{fig:tspCutExample1}
+\end{figure}
+
+In Abbildung \ref{fig:tspCutExample2} ist der Zeitplan aus Abbildung \ref{fig:tspCutExample1} auf einen 60 Minuten Slot angepasst worden. Zuerst wurden LKW 14 und LKW 15 vom Ladeplatz 2 entfernt und auf Ladeplatz 4 verschoben, da dies die einzige Kette ist, die noch vollständig auf einen anderen Platz passt. Die Kette von LKW 6 bis LKW 9 wurde auf Ladeplatz 4 verschoben, hier ist allerdings zu erkennen, dass diese dort nicht komlett hinein passt und somit LKW 8 und LKW 9 in diesem Slot nicht bearbeitet werden können. Außerdem haben sich die Zeitfenster der LKW am Anfang und Ende der zusammenhängenden Ketten leicht verlängert, da sowohl die verschobenen Teile, als auch die zurückgebliebenen Teile etwas längere Zeit brauchen, da hier kein optimaler Wechsel der Ladehilfsmittel mehr gegeben ist.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/timelines/timelineTspCutExample2.png}
+    \caption{Zeitplan aus Abb. \ref{fig:tspCutExample1} auf einen 60 Minuten Slot angepsst}
+    \label{fig:tspCutExample2}
+\end{figure}
+
+
+\subsubsection{Vergleichswerte zur Auswertung generieren}
+
+\todo{fcfs ausgangssituation generieren beschreiben}
+
+Ein letzter Schritt, welcher nicht direkt für den zuvor beschriebenen Optimierungsalgorithmus benötigt wird, ist die Generierung eines Zeitplans zu Vergleichs- und Auswertungszwecken. Dieser Zeitplan soll die Reihenfolge der Abfertigung im unoptimierten Zustand nachbilden. Nötig ist dies, da kaum nutzbare, reale Testdaten vorhanden sind. Gerade um eine große Menge generierter LKW Buchungen auswerten zu können, macht es durchaus Sinn sich Gedanken zu machen, wie ein solcher Algorithmus arbeiteten könnte. Zusätzlich lassen sich hier auch noch einmal genaue Erkenntnisse und ein besseres Verständnis für die bisherige Ausgangssiuation gewinnen, wenn man sich klar macht, wie die LKW dort ankommen.
+
+Prinzipiell kommen die LKW nach keinem wirklichen System an, wie bereits in Kapitel \ref{sec:analyse} herausgearbeitet wurde. Innerhalb des Slots kommen die LKWs theoretisch zu einer zufälligen Zeit. Somit wäre der Ansatz hier, die Liste der ankommenden LKW in eine zufällige Reihenfolge zu bringen und diese nach dem \glqq{}first come, first served\grqq{}-Prinzip zu sortieren. Für einen Ladeplatz ist da nicht viel Logik nötig, die Liste kann genau in dieser Reihenfolge übernommen werden. Für mehrere Ladeplätze müsste hier auch wieder die Zeitberechnung aus dem Optimierungsalgorithmus (siehe Kapitel TODO) herangezogen werden. Für die vorliegende Lösung wurde angenommen, dass die Abfertigungszeit, die jede Maschine braucht, sich nicht verändert. Ein Vorteil wird durch die beste Reihenfolge und die Einsparung von Fahrt- und Rüstzeiten erreicht. Das System zur Kostenberechnung selbst kann somit auch hier eingesetzt werden. Es müsste bei der Sortierung auf mehrere Plätze also nach jedem einsortierten LKW die entsprechende Dauer bis zur Fertigstellung des bisher letzten LKW berechnet werden und anschließend immer zum Ladeplatz mit der kürzesten Dauer ein LKW einsortiert werden. So wird nachgebildet, dass immer der Ladeplatz welcher als nächstes frei wird, den nächsten LKW aufnimmt.
+
+Insgesamt lässt sich so eben auch genau das Ausgangsproblem nachbilden: Die LKW kommen wie sie wollen, es wird keine Rücksicht darauf genommen, welche Ressourcen benötigt werden. Somit kann es zufällig einmal passen, dass die richtige Maschine bereits Vorort ist, in der Regel wird dies aber nicht der Fall sein und somit ein hoher Wechselaufwand entstehen.

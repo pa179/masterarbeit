@@ -1,0 +1,141 @@
+\phantomsection
+\section*{Anhang}
+\addcontentsline{toc}{section}{Anhang}
+\renewcommand{\leftmark}{Anhang}
+
+\phantomsection
+\subsection*{Anhang 3: Inhaltsverzeichnis der CD}
+\addcontentsline{toc}{subsection}{Anhang 3: Inhaltsverzeichnis der CD}%
+\label{appendix:digital}
+
+Folgende Daten wurden dieser Arbeit digital, in Form eines CD-Datenträgers beigefügt:
+
+\begin{itemize}
+    \item Diese Arbeit in digitaler Form
+    \item Quellcode für den in dieser Arbeit entwickelten Prototypen inkl. Installationsanleitung (README.md)
+    \item Mockups aus der Konzeption
+    \item Screenshots, Fotos und Videos des Endprodukts
+\end{itemize}
+
+
+\phantomsection
+\subsection*{Anhang 1: Experteninterviews}
+\label{sec:appendixInterviews}
+
+Um einen Eindruck von der Problemstellung und dessen Dimensionen zu bekommen, wurden zunächst informelle Gespräche mit einigen Projektbeteiligten der Firma HEC und somit Experten für diesen Bereich geführt. Um die darin gewonnenen Erkenntnisse noch einmal strukturiert und nachvollziehbar zusammenzufassen, sowie erweiterte Fragen zu klären, wurden gezielte, schriftliche Interview geführt. Diese sind im Folgenden dargestellt. 
+
+\subsubsection*{André Stadtelmeyer (Entwickler bei HEC beim Softwareprojekt für Unikai)}
+
+\textbf{Wie sieht die momentan genutzte Software aus?}
+
+Es gibt eine Software zur Slotbuchung und -steuerung, welche als Desktop Variante (hauptsächlich durch Spediteure genutzt) und als Mobile App (vor allem für LKW Fahrer) vorhanden ist. Zur Buchung werden über eine Eingabemaske grobe Daten zur Sendung und deren Gütern erfasst. Anschließend kann ein verfügbarer Slot ausgewählt werden, an dem die Ware angeliefert bzw. abgeholt werden soll.
+
+\textbf{Welche Daten werden darin bei der Avisierung erhoben?}
+
+Bei der Avisierung (Vorankündigung von Liefergütern) werden sogenannte Avise vom Reeder angekündigt. Diese sind durch eine Buchungsnummer eindeutig identifizierbar und sind immer speziell für einen der drei Warentypen (Container, Stückgut und Fahrzeug) ausgelegt. Im Fall von Container- und Fahrzeug-Avisen werden ebenfalls die einzelnen Positionen übermittelt: Im Fahrzeugfall wird die FIN (Fahrzeugidentifikationsnummer) übergeben und im Containerfall eine Containernummer und ein ISO-Code (Typenbezeichnung). Im Packstück-Fall gibt es vom Reeder keine spezielle Vorankündigung der einzelnen Liefergüter, da die Art der Packung unterschiedlich sein kann, z.B. wie ein großer Raupenkran auseinander gebaut und verschifft wird.
+
+\textbf{Welche Daten werden bei der Slotvergabe erhoben?}
+
+Bei der Slotvergabe fügt der Fahrende seine Liefergüter hinzu. Hierzu muss er im Fahrzeugfall die VIN eingeben, im Container- und Packstück-Fall die Buchungsnummer. Nach einer Prüfung des Datensatzes (ist dieser überhaupt vorhanden und nicht schon bereits gebucht?) kann der Fahrende weitere Informationen eingeben, wie z.B. Anzahl und Gewicht und Maße, oder ob es sich um Gefahrgut oder Zollware handelt. Im Stückgut-Fall werden keine Angaben zu Hebepunkten oder -vorgaben angegeben, sodass hierzu erst vor Ort entschieden werden kann, wie die Ware bewegt werden darf.
+
+Abschließend wird dem Fahrenden vom System eine Auswahl an verfügbaren Slots vorgeschlagen.
+
+\textbf{Wie läuft die Slotvergabe dort ab? Welche Slots kann man bei der Buchung auswählen und wie werden diese begrenzt?}
+
+Bei der Buchung können alle noch verfügbaren Slots ausgewählt werden. Die Verfügbarkeit richtet sich in erster Linie nach den Reisedaten zum dazugehörigen Schiff. Der Reeder liefert hierfür parallel zur Avisierung das ETA (Expected Time of Arrival) und das ETD (Expected Time of Departure). Für Anlieferungen muss bis spätestens einen Tag vor ETD die Ware angeliefert worden sein; im Auslieferfall (Abholung) darf erst einen Tag nach ETD abgeholt werden. Als nächste Stufe werden die Abfertigungsbereiche der Waren ermittelt. Jeder Abfertigungsbereich hat einen eigenen Buchungsvorlauf, sodass nur eine maximale Anzahl an Tagen im Voraus gebucht werden darf. Zum Beispiel dürfen Container maximal drei Tage im Voraus gebucht werden. Die Schnittmenge der beiden Zeiträume ermittelt und diese wird gegen die Anzahl der bereits getätigten Buchungen pro Zeitslot gelegt. Die Begrenzung kann dabei basierend auf Erfahrungswerten eingestellt werden. Pro Slot kann dabei eine Angabe gemacht werden, um z.B. eine Variation für Pausen o.ä. zu ermöglichen.
+
+\textbf{Wie ist die Slotgröße und in welche Größenordnung bewegt sich die Anzahl der LKW pro Slot bei Unikai?}
+
+Es wird mit einstündigen Slots gearbeitet. Die Anzahl an LKWs pro Slot ist abhängig vom Abfertigungsbereich und von der aktuellen Besatzungsstärke. Container können grundsätzlich schneller abgefertigt; Stückgut benötigt i.d.R. viel Zeit und Fahrzeuge bewegen sich zwischen den beiden Elementen.
+
+\textbf{Gibt es Zahlen oder Daten zur Verteilung und Häufigkeit in der bestimmte Ladungsarten vorkommen?}
+\todo[inline]{Kursiv von Andre}
+Bisher habe ich keine von Unikai bekommen, ich kann nochmal nachfragen – allerdings sind gerade viele im Urlaub
+
+\textbf{Gibt es weitere Besonderheiten oder Spezialfälle, die berücksichtigt werden?}
+
+Es gibt eine Vielzahl von Vorgaben und Anforderungen an die Handhabung bestimmter Güter. Diese werden momentan auf Softwareseite kaum berücksichtigt und erfasst. Bestimmte Güter dürfen bspw. nur mit bestimmten Maschinen bewegt werden. Das Hauptproblem ist dabei die sehr schwierige Datenlage vor Ankunft der LKW. Die eingegebenen Daten sind oft ungenau oder unvollständig. Eine Vorhersage der benötigten Ressourcen ist kaum möglich, da sich Details und Besonderheiten oft erst bei Ankunft des LKW herausstellen.
+
+\textbf{Welche Probleme treten auf und warum sollte das ganze System optimiert werden?}
+
+Momentan läuft die Abarbeitung der LKW sehr statisch und auf Erfahrungsbasis. Viele Sonderfälle und spezielle Behandlungen für die große Menge von unterschiedlichen Stückgütern werden kaum berücksichtigt. Es könnten vermutlich viel mehr LKW abgearbeitet werden, wenn genauer geplant wird.
+
+\textbf{Was könnten Ansatzpunkte für Verbesserungen sein?}
+
+Zunächst einmal müssten gute Rahmenbedingungen geschaffen werden, sodass eine Optimierung überhaupt möglich ist. Dazu zählt vor allem das Schaffen einer besseren Datenlage zur Planung.
+
+\textbf{Gibt es Testdaten die für die Masterthesis zur Verfügung gestellt werden können und mit denen z.B. Auswertungen angestellt werden können?}
+\todo[inline]{Kursiv von Andre}
+Ich denke nicht, da der Stückgut-Fall (den du hier ja betrachtest) eine freie Eingabe von Daten ermöglicht; Hauptsache der Reeder hat vorab angekündigt, dass irgendein Stückgut angeliefert wird. \todo{In der Arbeit erwähnen, dass Daten ja bisher auch nicht in der form erhoben werden, wie es für eine Optimierung nötig wäre. Somit gibt es gar keine Testdaten, welche 1:1 in meinen Algo gefüttert werden können.}
+
+\subsubsection*{Claas Weiß (...)}
+
+Wie läuft die Avisierung der LKW ab?
+
+LKW Fahrer oder Speditionen geben entsprechende Sendungsdaten entweder manuell über eine von uns entwickelte Software ein und suchen sich dann einen für sie passenden und verfügbaren Slot nach Daten und Uhrzeit aus. Alternativ kann die Übermittlung der Daten aber auch automatisiert im EDI-Format erfolgen.
+
+Welche Daten werden dabei konkret benötigt?
+
+
+
+Nach welchem Prinzip werden die avisierten LKW momentan abgearbeitet?
+
+Die LKW kommen zu einem beliebigen Zeitpunkt innerhalb ihres ausgewählten Slots am Terminal an. Dann werden sie praktisch ungeordnet nach dem first-come first-served Prinzip einem passenden Abfertigungsbereich zugeordnet. Dort erfolgt dann der eigentliche Be- bzw. Entladevorgang. Anschließend verlassen die LKW das Terminal und Bearbeitung ist aus dessen Sicht abgeschlossen.
+
+
+Wo genau liegen dabei die Probleme? Was wären grundsätzliche Ideen für Aspekte, die optimiert werden können?
+
+Der Ablauf ist momentan sehr statisch und geht wenig auf Spezialfälle und komplexere Anforderungen ein. Außerdem ist die vorab bekannte Datenlage momentan sehr ungenau. Viele Daten, insbesondere Beschreibungen werden unvollständig oder sehr vage durch die Speditionen angegeben. Die Idee ist es, die ganze Slotvergabe zu Dynamisieren. Durch gezieltere Planung könnte viel besser auf die einzelnen Sonderfälle und Spezialanforderungen eingegangen werden und somit eine schnellere Bearbeitung erfolgen. Beispielsweise könnte gezielt danach geplant werden, welche Ressourcen im Hafen zur Verfügung stehen und alle Buchungen mit ihren benötigten Ressourcen darauf möglich gut einzuteilen. Die Ressourcen bei den Ladehilfsmitteln und dem Personal könnte man z.B. in h/Slot definieren und Sollwerte bei den Wartenarten hinterlegen. Ggf. gibt es Slots, wo die verfügbare Kapazität abweicht – z.B. wegen Pausen, Schichtwechsel etc.
+
+
+Wie werden die für die Abfertigung benötigten Ladehilfsmittel und andere Ressourcen bestimmt?
+
+Die Art und Weise der Be- bzw. Entladung lässt sich nur bedingt aus den zuvor bei der Avisierung übermittelten Daten ableiten. Bisher wird dies eher nach einer persönlichen Begutachtung bei Ankunft des LKW im Hafen bestimmt.
+
+
+Welche Ressourcen und Ladehilfsmittel sind im Terminal verfügbar, bzw. müssten berücksichtigt werden?
+
+Es gibt Maschinen, welche zum be- oder entladen genutzt werden. Dies sind Gabelstapler, Kran, Reachstacker (,...?). Außerdem wird Personal benötigt, d.h. zum einen Fahrer für die jeweiligen Maschinen, aber auch Fahrer, welche direkt selbstfahrende Einheiten bewegen. Außerdem gibt es Einweiser. Hinzu kommt weiteres Equipment, wie spezielles Ladegeschirr oder Mafi-Trailer. Neben den benötigten Ressourcen für die Zeit der Bearbeitung eines LKW, ist z.B. auch die Verfügbarkeit von Stellplätzen im Hafen relevant. Abgeladene Güter müssen einen Platz bekommen, an dem sie bis zur Verladung auf das Schiff zwischen gelagert werden. Dieser muss unter Umständen auch einen Stromanschluss für fortlaufende Kühlung o.ä. beinhalten.
+
+
+Gibt es weitere Sonderfälle oder Aspekte, welche berücksichtigt werden sollten?
+
+Es kann sein, dass mehrere Maschinen für die Bearbeitung einsetzbar sind. Hier sind Umrüst- oder Wechselzeiten zu bedenken.
+
+
+Gibt es dort eine Systematik, nach der die benötigten Ressourcen/Hilfsmittel ausgewählt werden?
+
+Je nach Gutart kann das benötigte Equipment zum Abladen bestimmt werden. [Gibt es da genauere Angaben?] Die Schwierigkeit ist, dass es durch die Vielzahl von unterschiedlichen und oft speziellen Stückgütern auch oft spezielle Vorgaben zum Vorgehen und zur Handhabung beim Laden gibt. Es gibt aber auch einige Oberkategorien, in die die Art der Waren eingeteilt werden kann.
+
+
+Welche Kategorien von Waren können grundsätzlich unterschieden werden?
+
+Mögliche Waren, die abgefertigt werden müssen:
+- Container (sind größentechnisch standardisiert, es können aber z.B. bei temperierten Containern zusätzliche Restriktionen wie z.B. das Vorhandensein eines Stellplatzes mit Stromanschluss hinzukommen)
+- Stückgut (z.B. Kisten, Maschinenteile, Kranteile)
+- Selbstfahrende Einheiten (z.B. Autos, Zugmaschinen, Kräne) – diese rollen „direkt“ an (sog. eigene Achse)
+- Selbstfahrende Einheiten (ebenfalls z.B. Autos, Zugmaschinen, Kräne, landwirtschaftliche Geräte wie Trecker, Mähdrescher) – diese können von einem anliefernden Fahrzeug (PKW-Transporter, Tieflader) selbstständig runterfahren und anschließend bewegt werden
+- Nicht selbstfahrende Einheiten (z.B. auch Mähdrescher, bei dem erst die Räder wieder montiert werden müssen, Wohnwagen, Eisenbahnwaggons …) – hierzu braucht man beispielsweise einen Kran zum Herunterheben
+
+
+Gibt es Zahlen oder Daten zur Verteilung und Häufigkeit in der bestimmte Ladungsarten vorkommen?
+
+
+
+Welcher Ablauf ist aus Sicht der LKW Fahrer bzw. Speditionen sinnvoll?
+
+Aus deren Sicht ist eine möglichst schnelle Abfertigung nach Ankunft am Terminal wichtig. Verzögerungen kosten Geld und wirken sich auf Folgeaufträge aus. 
+
+
+
+Um eine sinnvolle Planung und Optimierung vornehmen zu können, wird es notwendig sein, engere Zeitpläne und somit striktere Zeitvorgaben für die Ankunft der LKW vorzugeben. Ist dies praktisch sinnvoll anwendbar? Mit vielen Verzögerungen durch Stau o.ä. wäre eine solche Optimierung schwer realisierbar.
+
+
+
+Eine sinnvolle Planung kann nur erzeugt werden, wenn alle angemeldeten LKW bekannt sind. Die Idee wäre, dass LKW Fahrer einen Slot als Zeitraum wählen und ihnen dann nach vollständiger Belegung eine genaue Uhrzeit mitgeteilt wird. Evtl. wären sogar nachträgliche Verschiebungen in Folgeslots denkbar. Ist so ein Vorgehen mit den Speditionen vereinbar?
+
+Grundsätzlich ist das denkbar. Wenn ein Anlieferzeitpunkt bekannt ist und diese Verschiebungen nicht zu groß werden, kann der LKW Fahrer auch an anderer Stelle warten und zu gegebener Zeit kommen. Es gibt allerdings Prioritäten unter den Kunden, wichtige Kunden bekommen garantierte Abfertigungszeiten und sollten so schnell wie möglich bearbeitet werden, sie dürfen nicht in andere Slots verschoben werden.
+
+
+
+\subsubsection*{Sven Tröger (Entwickler bei HEC, insbesondere Experte für künstliche Intelligenz)}
